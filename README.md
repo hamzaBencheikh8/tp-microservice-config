@@ -17,8 +17,57 @@ All services are configured to send tracing data to a **Zipkin** server for dist
 
 ## Services
 
-*Coming soon: A breakdown of each service and its configuration.*
+This section provides a detailed breakdown of each service and its configuration.
+
+### Global Configuration (`application.properties`)
+
+This file contains properties that are shared across all services:
+
+- `spring.zipkin.base-url`: Sets the address of the Zipkin server for distributed tracing.
+- `management.tracing.sampling.probability`: Configures the percentage of traces to be sent to Zipkin (set to `1.0` for 100%).
+- `management.endpoints.web.exposure.include=*`: Exposes all Spring Boot Actuator endpoints.
+
+### Config Server (`config-server-production.properties`)
+
+The Config Server provides centralized configuration management.
+
+- `server.port`: The port on which the server runs (production: `9888`).
+- `spring.cloud.config.server.git.uri`: The URL of the Git repository that stores the configuration files.
+
+### Discovery Server (`discovery-server-production.properties`)
+
+The Discovery Server (Eureka) allows services to find each other on the network.
+
+- `server.port`: The port for the discovery server (production: `9761`).
+- `eureka.client.register-with-eureka=false`: Prevents the server from registering itself.
+- `eureka.client.fetch-registry=false`: Prevents the server from fetching the registry from another Eureka server.
+
+### Edge Server (`edge-server.properties` & `edge-server-production.properties`)
+
+The Edge Server (API Gateway) is the single entry point for all client requests.
+
+- `server.port`: The port for the gateway (non-production: `8000`, production: `9000`).
+- `spring.cloud.gateway.server.webflux.routes`: Defines the routing rules for incoming requests, mapping them to the appropriate backend services.
+
+### Product Composite Service (`product-composite-service.properties` & `product-composite-service-production.properties`)
+
+This service aggregates data from the `product`, `recommendation`, and `review` services.
+
+- `server.port`: The port for the service (non-production: `8070`, production: `9070`).
+- `resilience4j.circuitbreaker.instances.*`: Configures the Resilience4j circuit breaker to handle failures when communicating with other services.
 
 ## Usage
 
-*Coming soon: Instructions on how to use these configuration files to run the microservices application.*
+To use these configuration files, you will need to have a Spring Boot application for each service (`config-server`, `discovery-server`, etc.). The name of the property file should match the `spring.application.name` property in your `bootstrap.yml` or `application.yml` file.
+
+For example, to run the `product-composite-service` in a non-production environment, you would use the `product-composite-service.properties` file. For a production environment, you would use `product-composite-service-production.properties` by activating the `production` Spring profile.
+
+### Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/THUNDER1298/tp-microservice-config.git
+   ```
+2. **Run the Config Server**: Start the `config-server` and point it to this Git repository.
+3. **Run the Discovery Server**: Start the `discovery-server`.
+4. **Run the other services**: Start the remaining services. They will fetch their configuration from the Config Server and register with the Discovery Server.
